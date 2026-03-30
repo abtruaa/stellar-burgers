@@ -1,0 +1,159 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { TUser } from '@utils-types';
+import { loginUserApi, registerUserApi, updateUserApi, getUserApi } from '@api';
+import { setCookie } from '../../utils/cookie';
+
+// Получение пользователя по токену
+export const fetchUser = createAsyncThunk('user/fetchUser', async () => {
+  try {
+    const response = await getUserApi();
+    return response.user;
+  } catch (error) {
+    console.error('fetchUser error:', error);
+    localStorage.removeItem('refreshToken');
+    return null;
+  }
+});
+
+// Логин
+export const login = createAsyncThunk(
+  'user/login',
+  async ({ email, password }: { email: string; password: string }) => {
+    const response = await loginUserApi({ email, password });
+    console.log('Login API response:', response);
+
+    // Сохраняем токены
+    localStorage.setItem('refreshToken', response.refreshToken);
+    // Сохраняем accessToken в cookies (как ожидает API)
+    setCookie('accessToken', response.accessToken);
+
+    console.log('AccessToken saved to cookie');
+    return response.user;
+  }
+);
+
+// Регистрация
+export const register = createAsyncThunk(
+  'user/register',
+  async ({
+    name,
+    email,
+    password
+  }: {
+    name: string;
+    email: string;
+    password: string;
+  }) => {
+    const response = await registerUserApi({ name, email, password });
+    console.log('Register API response:', response);
+
+    localStorage.setItem('refreshToken', response.refreshToken);
+    setCookie('accessToken', response.accessToken);
+
+    return response.user;
+  }
+);
+
+// Обновление пользователя
+export const updateUser = createAsyncThunk(
+  'user/updateUser',
+  async (data: { name?: string; email?: string; password?: string }) => {
+    const response = await updateUserApi(data);
+    return response.user;
+  }
+);
+
+// Выход
+export const logout = createAsyncThunk('user/logout', async () => {
+  localStorage.removeItem('refreshToken');
+  setCookie('accessToken', '', { expires: -1 }); // Удаляем cookie
+  return null;
+});
+
+interface UserState {
+  user: TUser | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+const initialState: UserState = {
+  user: null,
+  isLoading: false,
+  error: null
+};
+
+const userSlice = createSlice({
+  name: 'user',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      // Fetch user
+      .addCase(fetchUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        console.log('fetchUser fulfilled:', action.payload);
+      })
+      .addCase(fetchUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.user = null;
+        console.log('fetchUser rejected:', action.error);
+      })
+      // Login
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        console.log('login fulfilled:', action.payload);
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Ошибка входа';
+        console.log('login rejected:', action.error);
+      })
+      // Register
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        console.log('register fulfilled:', action.payload);
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Ошибка регистрации';
+        console.log('register rejected:', action.error);
+      })
+      // Update user
+      .addCase(updateUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        console.log('updateUser fulfilled:', action.payload);
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Ошибка обновления';
+        console.log('updateUser rejected:', action.error);
+      })
+      // Logout
+      .addCase(logout.fulfilled, (state) => {
+        state.user = null;
+        console.log('logout fulfilled');
+      });
+  }
+});
+
+export default userSlice.reducer;
