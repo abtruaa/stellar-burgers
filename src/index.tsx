@@ -5,6 +5,12 @@ import { Provider } from 'react-redux';
 import App from './components/app/app';
 import store from './services/store';
 import './index.css';
+import { fetchUser } from './services/slices/userSlice';
+
+const token = localStorage.getItem('accessToken');
+if (token) {
+  store.dispatch(fetchUser());
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
