@@ -1,12 +1,9 @@
-// src/services/slices/feedSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { TOrder } from '@utils-types';
 import { getFeedsApi } from '@api';
 
 export const fetchFeeds = createAsyncThunk('feed/fetchFeeds', async () => {
-  console.log('Fetching feeds...');
   const response = await getFeedsApi();
-  console.log('Feeds API response:', response);
   return response;
 });
 
@@ -35,23 +32,16 @@ const feedSlice = createSlice({
       .addCase(fetchFeeds.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-        console.log('Feed loading...');
       })
       .addCase(fetchFeeds.fulfilled, (state, action) => {
         state.isLoading = false;
         state.orders = action.payload.orders;
         state.total = action.payload.total;
         state.totalToday = action.payload.totalToday;
-        console.log('Feed loaded:', {
-          ordersCount: state.orders.length,
-          total: state.total,
-          totalToday: state.totalToday
-        });
       })
       .addCase(fetchFeeds.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Ошибка загрузки ленты заказов';
-        console.error('Feed error:', state.error);
       });
   }
 });

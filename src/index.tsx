@@ -10,6 +10,8 @@ import { fetchUser } from './services/slices/userSlice';
 const token = localStorage.getItem('accessToken');
 if (token) {
   store.dispatch(fetchUser());
+} else {
+  localStorage.removeItem('refreshToken');
 }
 
 const root = ReactDOM.createRoot(

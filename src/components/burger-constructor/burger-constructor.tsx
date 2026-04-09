@@ -1,4 +1,3 @@
-// src/components/burger-constructor/burger-constructor.tsx
 import { FC, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TConstructorIngredient, TOrder } from '@utils-types';
@@ -52,6 +51,7 @@ export const BurgerConstructor: FC = () => {
     dispatch(createOrder(orderData))
       .unwrap()
       .then(() => {
+        dispatch(clearConstructor());
         // После успешного создания заказа обновляем историю
         dispatch(fetchUserOrders());
       })

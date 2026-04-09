@@ -1,4 +1,3 @@
-// src/pages/feed/feed.tsx
 import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
 import { FC, useEffect } from 'react';
@@ -10,16 +9,10 @@ export const Feed: FC = () => {
   const { orders, isLoading, error } = useSelector((state) => state.feed);
 
   useEffect(() => {
-    console.log('Feed: fetching feeds');
     dispatch(fetchFeeds());
   }, [dispatch]);
 
-  const handleGetFeeds = () => {
-    console.log('Feed: manual refresh');
-    dispatch(fetchFeeds());
-  };
-
-  console.log('Feed state:', { isLoading, ordersCount: orders?.length, error });
+  const handleGetFeeds = () => dispatch(fetchFeeds());
 
   if (isLoading) {
     return <Preloader />;

@@ -6,11 +6,18 @@ import { setCookie } from '../../utils/cookie';
 // Получение пользователя по токену
 export const fetchUser = createAsyncThunk('user/fetchUser', async () => {
   try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      return null;
+    }
     const response = await getUserApi();
     return response.user;
-  } catch (error) {
-    console.error('fetchUser error:', error);
-    localStorage.removeItem('refreshToken');
+  } catch (error: any) {
+    // Если ошибка авторизации, очищаем токены
+    if (error.message === 'You should be authorised' || error.status === 401) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    }
     return null;
   }
 });
@@ -20,14 +27,12 @@ export const login = createAsyncThunk(
   'user/login',
   async ({ email, password }: { email: string; password: string }) => {
     const response = await loginUserApi({ email, password });
-    console.log('Login API response:', response);
 
     // Сохраняем токены
     localStorage.setItem('refreshToken', response.refreshToken);
     // Сохраняем accessToken в cookies (как ожидает API)
     setCookie('accessToken', response.accessToken);
 
-    console.log('AccessToken saved to cookie');
     return response.user;
   }
 );
@@ -45,7 +50,6 @@ export const register = createAsyncThunk(
     password: string;
   }) => {
     const response = await registerUserApi({ name, email, password });
-    console.log('Register API response:', response);
 
     localStorage.setItem('refreshToken', response.refreshToken);
     setCookie('accessToken', response.accessToken);
@@ -96,12 +100,12 @@ const userSlice = createSlice({
       .addCase(fetchUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
-        console.log('fetchUser fulfilled:', action.payload);
       })
       .addCase(fetchUser.rejected, (state, action) => {
         state.isLoading = false;
         state.user = null;
-        console.log('fetchUser rejected:', action.error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       })
       // Login
       .addCase(login.pending, (state) => {
@@ -111,12 +115,10 @@ const userSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
-        console.log('login fulfilled:', action.payload);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Ошибка входа';
-        console.log('login rejected:', action.error);
       })
       // Register
       .addCase(register.pending, (state) => {
@@ -126,12 +128,10 @@ const userSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
-        console.log('register fulfilled:', action.payload);
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Ошибка регистрации';
-        console.log('register rejected:', action.error);
       })
       // Update user
       .addCase(updateUser.pending, (state) => {
@@ -141,17 +141,14 @@ const userSlice = createSlice({
       .addCase(updateUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
-        console.log('updateUser fulfilled:', action.payload);
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Ошибка обновления';
-        console.log('updateUser rejected:', action.error);
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
-        console.log('logout fulfilled');
       });
   }
 });

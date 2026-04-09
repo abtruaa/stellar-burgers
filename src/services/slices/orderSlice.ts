@@ -1,12 +1,19 @@
-// src/services/slices/orderSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { orderBurgerApi } from '@api';
+import { orderBurgerApi, getOrderByNumberApi } from '@api';
 
 export const createOrder = createAsyncThunk(
   'order/createOrder',
   async (data: string[]) => {
     const response = await orderBurgerApi(data);
     return response.order;
+  }
+);
+
+export const fetchOrderByNumber = createAsyncThunk(
+  'order/fetchOrderByNumber',
+  async (number: number) => {
+    const response = await getOrderByNumberApi(number);
+    return response.orders[0];
   }
 );
 

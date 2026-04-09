@@ -1,6 +1,7 @@
 import { FC, ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from '../../services/store';
+import { Preloader } from '@ui';
 
 type TProtectedRouteProps = {
   onlyUnAuth?: boolean;
@@ -12,12 +13,14 @@ export const ProtectedRoute: FC<TProtectedRouteProps> = ({
   children
 }) => {
   const location = useLocation();
-  const { user } = useSelector((state) => state.user);
+  const { user, isLoading } = useSelector((state) => state.user);
   const isAuthenticated = !!user;
 
+  if (isLoading) {
+    return <Preloader />;
+  }
   // Если маршрут только для неавторизованных, а пользователь авторизован
   if (onlyUnAuth && isAuthenticated) {
-    // Сохраняем путь, с которого пришли, или идем на главную
     const from = location.state?.from?.pathname || '/';
     return <Navigate to={from} replace />;
   }
