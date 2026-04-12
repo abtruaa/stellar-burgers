@@ -6,14 +6,13 @@ import { setCookie } from '../../utils/cookie';
 // Получение пользователя по токену
 export const fetchUser = createAsyncThunk('user/fetchUser', async () => {
   try {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('refreshToken');
     if (!token) {
       return null;
     }
     const response = await getUserApi();
     return response.user;
   } catch (error: any) {
-    // Если ошибка авторизации, очищаем токены
     if (error.message === 'You should be authorised' || error.status === 401) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -30,7 +29,6 @@ export const login = createAsyncThunk(
 
     // Сохраняем токены
     localStorage.setItem('refreshToken', response.refreshToken);
-    // Сохраняем accessToken в cookies (как ожидает API)
     setCookie('accessToken', response.accessToken);
 
     return response.user;
@@ -70,7 +68,7 @@ export const updateUser = createAsyncThunk(
 // Выход
 export const logout = createAsyncThunk('user/logout', async () => {
   localStorage.removeItem('refreshToken');
-  setCookie('accessToken', '', { expires: -1 }); // Удаляем cookie
+  setCookie('accessToken', '', { expires: -1 });
   return null;
 });
 
@@ -89,7 +87,11 @@ const initialState: UserState = {
 const userSlice = createSlice({
   name: 'user',
   initialState,
-  reducers: {},
+  reducers: {
+    logout: (state) => {
+      state.user = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
       // Fetch user
@@ -104,8 +106,6 @@ const userSlice = createSlice({
       .addCase(fetchUser.rejected, (state, action) => {
         state.isLoading = false;
         state.user = null;
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
       })
       // Login
       .addCase(login.pending, (state) => {
