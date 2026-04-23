@@ -1,24 +1,69 @@
 import { FC, useMemo } from 'react';
-import { TConstructorIngredient } from '@utils-types';
+import { useNavigate } from 'react-router-dom';
+import { TConstructorIngredient, TOrder } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
+import { useDispatch, useSelector } from '../../services/store';
+import { clearConstructor } from '../../services/slices/constructorSlice';
+import { createOrder, clearOrder } from '../../services/slices/orderSlice';
+import { fetchUserOrders } from '../../services/slices/profileOrderSlice';
 
 export const BurgerConstructor: FC = () => {
-  /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { bun, ingredients } = useSelector((state) => state.burgerConstructor);
+  const { user } = useSelector((state) => state.user);
+  const { isLoading: orderRequest, order } = useSelector(
+    (state) => state.order
+  );
+
+  const orderModalData: TOrder | null = order
+    ? {
+        _id: '',
+        status: '',
+        name: order.name,
+        createdAt: '',
+        updatedAt: '',
+        number: order.number,
+        ingredients: []
+      }
+    : null;
+
   const constructorItems = {
-    bun: {
-      price: 0
-    },
-    ingredients: []
+    bun: bun,
+    ingredients: ingredients
   };
-
-  const orderRequest = false;
-
-  const orderModalData = null;
 
   const onOrderClick = () => {
-    if (!constructorItems.bun || orderRequest) return;
+    if (!constructorItems.bun) return;
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const orderData = [
+      constructorItems.bun._id,
+      ...constructorItems.ingredients.map((item) => item._id),
+      constructorItems.bun._id
+    ];
+
+    dispatch(createOrder(orderData))
+      .unwrap()
+      .then(() => {
+        dispatch(clearConstructor());
+        // После успешного создания заказа обновляем историю
+        dispatch(fetchUserOrders());
+      })
+      .catch((err) => {
+        console.error('Order creation failed:', err);
+      });
   };
-  const closeOrderModal = () => {};
+
+  const closeOrderModal = () => {
+    dispatch(clearOrder());
+    dispatch(clearConstructor());
+  };
 
   const price = useMemo(
     () =>
@@ -29,8 +74,6 @@ export const BurgerConstructor: FC = () => {
       ),
     [constructorItems]
   );
-
-  return null;
 
   return (
     <BurgerConstructorUI
