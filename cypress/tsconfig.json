@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["es6", "dom"],
+    "types": ["cypress", "node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    // "baseUrl": "..",
+    "paths": {}
+  },
+  "include": ["**/*.ts", "../src/**/*.ts"],
+  "exclude": ["../node_modules"]
+}
