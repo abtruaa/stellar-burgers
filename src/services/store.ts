@@ -1,4 +1,5 @@
-import { configureStore } from '@reduxjs/toolkit';
+// src/services/store.ts
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import {
   TypedUseSelectorHook,
   useDispatch as dispatchHook,
@@ -11,14 +12,15 @@ import feedReducer from './slices/feedSlice';
 import orderReducer from './slices/orderSlice';
 import profileOrdersReducer from './slices/profileOrderSlice';
 
-export const rootReducer = {
+// Объединяем редьюсеры в функцию combineReducers
+export const rootReducer = combineReducers({
   user: userReducer,
   ingredients: ingredientsReducer,
   burgerConstructor: constructorReducer,
   feed: feedReducer,
   order: orderReducer,
   profileOrders: profileOrdersReducer
-};
+});
 
 const store = configureStore({
   reducer: rootReducer,

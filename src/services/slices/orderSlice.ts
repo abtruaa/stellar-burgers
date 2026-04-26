@@ -26,7 +26,7 @@ interface OrderState {
   error: string | null;
 }
 
-const initialState: OrderState = {
+export const initialState: OrderState = {
   order: null,
   isLoading: false,
   error: null
