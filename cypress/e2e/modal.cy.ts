@@ -26,19 +26,15 @@ describe('Модальное окно ингредиента', () => {
 
   it('закрытие модального окна по оверлею', () => {
     cy.contains('Флюоресцентная булка R2-D3').click();
-    // Альтернативный способ закрытия - клик по оверлею
 cy.get('#modals').then(($modal) => {
-  // Ищем элемент с классом overlay или просто кликаем по фону
   const overlay = $modal.find('[class*="overlay"]');
   if (overlay.length) {
     cy.wrap(overlay).click();
   } else {
-    // Если оверлея нет, кликаем по крестику
     cy.get('#modals button').last().click();
   }
 });
 
-// Проверяем, что модалка закрылась (элемент #modals пуст)
 cy.get('#modals').children().should('have.length', 0);
   })
 });
